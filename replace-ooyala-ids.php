@@ -3,7 +3,7 @@
 Plugin Name: Ooyala/Inform ID replacer
 Plugin URI: http://www.denverpost.com
 Description: Takes a CSV of Ooyala and Inform video IDs and swaps them in posts' custom fields.
-Version: 0.1a
+Version: 0.2b
 Author: Daniel J. Schneider
 Author URI: http://schneidan.com
 /*/
@@ -43,7 +43,7 @@ function dpoo_options_page() {
     <?php settings_fields('dpoo_options'); ?>
     <?php do_settings_sections('dpoo'); ?>
      
-    <input name="Submit" type="submit" value="<?php esc_attr_e('Save Changes'); ?>" />
+    <input name="Submit" type="submit" value="<?php esc_attr_e('Replace Oyala IDs'); ?>" />
     </form></div>
 <?php
 }
@@ -135,13 +135,14 @@ function get_post_from_video($videoid) {
         'meta_query'    => array(
             'relation'  => 'OR',
             array(
-                'key'   => 'video_id',
-                'value' => $videoid,
+                'key'       => 'video_id',
+                'value'     => $videoid,
+                'compare'   => 'LIKE',
                 ),
             array(
-                'key'   => 'main_video',
-                'value' => $videoid,
-                'compare'   => 'IN',
+                'key'       => 'main_video',
+                'value'     => $videoid,
+                'compare'   => 'LIKE',
                 )
             ),
         );
