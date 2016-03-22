@@ -86,7 +86,7 @@ function dpovi_get_post_video_ids($input) {
     if ($post_query->have_posts()) {
         while ($post_query->have_posts()) {
             $post_query->the_post();
-            $output_csv .= get_permalink(get_the_ID()).','.get_post_meta(get_the_ID(),'video_id',true).','."\r\n";
+            $output_csv .= get_permalink(get_the_ID()).','.get_post_meta(get_the_ID(),'video_id',true)."\r\n";
         }
     }
     wp_reset_postdata();
