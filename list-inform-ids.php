@@ -22,23 +22,22 @@ register_activation_hook(__FILE__, 'dpovi_install_callback');
 // add the admin settings and such
 function dpovi_admin_init(){
     register_setting( 'dpovi_options', 'dpovi_options', 'dpovi_options_validate' );
-    add_settings_section('dpovi_input', 'CSV', 'dpovi_csv_text', 'dpoo');
-    add_settings_field('dpovi_csv', 'Copy resulting CSV', 'dpovi_csv_string', 'dpoo', 'dpovi_input');
+    add_settings_section('dpovi_input', 'CSV', 'dpovi_csv_text', 'dpovi');
+    add_settings_field('dpovi_csv', 'Copy resulting CSV', 'dpovi_csv_string', 'dpovi', 'dpovi_input');
 }
 add_action('admin_init', 'dpovi_admin_init');
 
 // display the admin options page
 function dpovi_options_page() {
     if( isset($_GET['settings-updated']) ) {
-        $options = get_option('dpovi_options');
-        add_settings_error('results','results','<p>Found a lod of video IDs. Copy them below.</p>','updated');
+        add_settings_error('results','results','<p>Found a lot of video IDs. Copy them below.</p>','updated');
     } ?>
     <div>
     <h2>Denver Post Video ID discoverer</h2>
     <?php settings_errors(); ?>
     <form action="options.php" method="POST">
     <?php settings_fields('dpovi_options'); ?>
-    <?php do_settings_sections('dpoo'); ?>
+    <?php do_settings_sections('dpovi'); ?>
      
     <input name="Submit" type="submit" value="<?php esc_attr_e('Discover Video IDs'); ?>" />
     </form></div>
@@ -56,17 +55,13 @@ function dpovi_csv_text() {
 }
 function dpovi_csv_string() {
     $options = get_option('dpovi_options');
-    $output_csv = make_array_csv($options['dpovi_results']);
-    echo '<textarea id="dpovi_csv_input" name="dpovi_options[dpovi_csv_input]" style="width:100%;height:500px;">' . $output_csv . '</textarea>';
+    echo '<textarea id="dpovi_csv_result" name="dpovi_options[dpovi_csv_result]" style="width:100%;height:500px;">' . $options['dpovi_csv_result'] . '</textarea>';
 }
 
 
 // validate our options
 function dpovi_options_validate($input) {
-    $newinput['dpovi_csv_input'] = '';
-    $newinput['dpovi_limit_rows'] = ( !empty($input['dpovi_limit_rows']) && is_numeric($input['dpovi_limit_rows']) ) ? (int)$input['dpovi_limit_rows'] : false;
-    $newinput['dpovi_test_mode_enable'] = ( $input['dpovi_test_mode_enable'] ) ? 1 : 0;
-    $newinput['dpovi_results'] = get_post_video_ids();
+    $newinput['dpovi_csv_result'] = dpovi_get_post_video_ids($input);
     return $newinput;
 }
 
@@ -74,18 +69,11 @@ function dpovi_options_validate($input) {
  * Actually doing stuff down here
  */
 
-function make_array_csv($inputarray) {
-    $returns = '';
-    foreach ($inputarray as $line) {
-        $returns .= $line[0].','.$line[1].','."\r\n";
-    }
-    return $returns;
-}
-
-function get_post_video_ids() {
-    $ids = array();
+function dpovi_get_post_video_ids($input) {
+    $output_csv ='';
     $args = array(
         'post_type'     => 'post',
+        'posts_per_page'=> -1,
         'meta_query'    => array(
             array(
                 'key'       => 'video_id',
@@ -98,11 +86,11 @@ function get_post_video_ids() {
     if ($post_query->have_posts()) {
         while ($post_query->have_posts()) {
             $post_query->the_post();
-            $ids[] = array(the_permalink(),get_post_meta(get_the_ID(),'video_id'));
+            $output_csv .= get_permalink(get_the_ID()).','.get_post_meta(get_the_ID(),'video_id',true).','."\r\n";
         }
     }
     wp_reset_postdata();
-    return $ids;
+    return $output_csv;
 }
 
 ?>
